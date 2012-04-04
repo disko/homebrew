@@ -1,20 +1,18 @@
 require 'formula'
-require 'hardware'
 
 class Qt < Formula
-  url 'http://get.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.7.4.tar.gz'
-  md5 'ddf7d83f912cf1283aa066368464fa22'
   homepage 'http://qt.nokia.com/'
-  bottle 'https://downloads.sf.net/project/machomebrew/Bottles/qt-4.7.4-bottle.tar.gz'
-  bottle_sha1 '3195cddb76c0d13b4500dc75cc55f20f00c10ef1'
+  url 'http://get.qt.nokia.com/qt/source/qt-everywhere-opensource-src-4.8.1.tar.gz'
+  md5 '7960ba8e18ca31f0c6e4895a312f92ff'
+
+  bottle do
+    sha1 'd523bfbc1c7e50cdd10b64b1b10db187ec7e7c2b' => :lion
+  end
 
   head 'git://gitorious.org/qt/qt.git', :branch => 'master'
 
-  def patches
-    [
-      # Stop complaining about using Lion
-      "https://qt.gitorious.org/qt/qt/commit/1766bbdb53e1e20a1bbfb523bbbbe38ea7ab7b3d?format=patch"
-    ]
+  fails_with :clang do
+    build 318
   end
 
   def options
@@ -69,12 +67,14 @@ class Qt < Formula
     if ARGV.include? '--with-debug-and-release'
       args << "-debug-and-release"
       # Debug symbols need to find the source so build in the prefix
-      Dir.chdir '..'
-      mv "qt-everywhere-opensource-src-#{version}", "#{prefix}/src"
-      Dir.chdir "#{prefix}/src"
+      mv "../qt-everywhere-opensource-src-#{version}", "#{prefix}/src"
+      cd "#{prefix}/src"
     else
       args << "-release"
     end
+
+    # Needed for Qt 4.8.1 due to attempting to link moc with gcc.
+    ENV['LD'] = ENV['CXX']
 
     system "./configure", *args
     system "make"
@@ -93,17 +93,22 @@ class Qt < Formula
     # Some config scripts will only find Qt in a "Frameworks" folder
     # VirtualBox is an example of where this is needed
     # See: https://github.com/mxcl/homebrew/issues/issue/745
+    # TODO - surely this link can be made without the `cd`
     cd prefix do
       ln_s lib, "Frameworks"
     end
 
-    # The pkg-config files installed suggest that geaders can be found in the
+    # The pkg-config files installed suggest that headers can be found in the
     # `include` directory. Make this so by creating symlinks from `include` to
     # the Frameworks' Headers folders.
     Pathname.glob(lib + '*.framework/Headers').each do |path|
       framework_name = File.basename(File.dirname(path), '.framework')
       ln_s path.realpath, include+framework_name
     end
+  end
+
+  def test
+    "#{bin}/qmake --version"
   end
 
   def caveats; <<-EOS.undent

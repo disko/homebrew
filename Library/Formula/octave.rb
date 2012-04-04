@@ -1,5 +1,4 @@
 require 'formula'
-require 'hardware'
 
 def no_magick?
   ARGV.include? '--without-graphicsmagick'
@@ -19,9 +18,10 @@ def snow_leopard_64?
 end
 
 class Octave < Formula
-  url 'http://ftpmirror.gnu.org/octave/octave-3.4.2.tar.bz2'
   homepage 'http://www.gnu.org/software/octave/index.html'
-  md5 '31c744ab4555a2bf04d5e644b93f9b51'
+  url 'http://ftpmirror.gnu.org/octave/octave-3.6.1.tar.bz2'
+  mirror 'http://ftp.gnu.org/gnu/octave/octave-3.6.1.tar.bz2'
+  md5 'b543dd5ca743cba8c1d3474b1b99ae41'
 
   depends_on 'pkg-config' => :build
   depends_on 'gnu-sed' => :build
@@ -38,6 +38,7 @@ class Octave < Formula
   depends_on 'dotwrp' if snow_leopard_64?
   # octave refuses to work with BSD readline, so it's either this or --disable-readline
   depends_on 'readline'
+  depends_on 'curl' if MacOS.leopard? # Leopard's libcurl is too old
 
   # additional features
   depends_on 'suite-sparse'
@@ -86,7 +87,7 @@ class Octave < Formula
 
   def caveats
     native_caveats = <<-EOS.undent
-      Octave 3.4.0 supports "native" plotting using OpenGL and FLTK. You can activate
+      Octave supports "native" plotting using OpenGL and FLTK. You can activate
       it for all future figures using the Octave command
 
           graphics_toolkit ("fltk")

@@ -2,19 +2,25 @@ require 'formula'
 
 class Fuse4x < Formula
   homepage 'http://fuse4x.org/'
-  url 'https://github.com/fuse4x/fuse.git', :tag => "fuse4x_0_8_12"
-  version "0.8.12"
+  url 'https://github.com/fuse4x/fuse.git', :tag => "fuse4x_0_9_0"
+  version "0.9.0"
 
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
   depends_on 'gettext'
   depends_on 'fuse4x-kext'
 
   def install
-    gettext = Formula.factory('gettext')
-
-    ENV['ACLOCAL'] = "/usr/bin/aclocal -I#{gettext.share}/aclocal"
+    # Build universal if the hardware can handle it---otherwise 32 bit only
+    MacOS.prefer_64_bit? ? ENV.universal_binary : ENV.m32
 
     system "autoreconf", "--force", "--install"
-    system "./configure", "--disable-dependency-tracking", "--disable-debug", "--disable-static", "--prefix=#{prefix}"
+
+    # force 64bit inodes on 10.5. On 10.6+ this is no-op.
+    ENV.append_to_cflags "-D_DARWIN_USE_64_BIT_INODE"
+    system "./configure", "--disable-dependency-tracking",
+                          "--disable-static",
+                          "--prefix=#{prefix}"
     system "make install"
   end
 end
