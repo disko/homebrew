@@ -13,7 +13,7 @@ class Python24 <Formula
   skip_clean ['bin', 'lib']
 
   def patches
-    {:p0 => ["http://svn.plone.org/svn/collective/buildout/python/src/python-2.4-darwin-10.6.patch"]}
+    {:p0 => ["https://raw.github.com/collective/buildout.python/master/src/python-2.4-darwin-10.6.patch"]}
   end
 
   def prefix_site_packages
